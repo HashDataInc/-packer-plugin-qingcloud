@@ -11,7 +11,7 @@ import (
 
 func main() {
 	pps := plugin.NewSet()
-	pps.RegisterBuilder("qingcloud", new(qingcloud.Builder))
+	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(qingcloud.Builder))
 	pps.SetVersion(qingcloudVersion.PluginVersion)
 	err := pps.Run()
 	if err != nil {
