@@ -1,4 +1,4 @@
-module github.com/wangjiaxi90/packer-plugin-qingcloud
+module github.com/HashDataInc/packer-plugin-qingcloud
 
 go 1.16
 
