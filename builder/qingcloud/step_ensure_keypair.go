@@ -68,7 +68,13 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 
 	} else {
 		loginKeyPairID = config.KeypairID
-		privateKey = string(config.SSHPrivateKey)
+		pk, err := config.ReadSSHPrivateKeyFile()
+
+		if err != nil {
+			ui.Error(err.Error())
+		}
+
+		privateKey = string(pk)
 	}
 	state.Put(LoginKeyPairID, loginKeyPairID)
 	state.Put(PrivateKey, privateKey)
