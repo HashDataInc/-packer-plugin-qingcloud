@@ -39,7 +39,7 @@ const (
 	LocalKey          = "local"
 )
 
-var DefaultTimeout = time.Second * 300
+var DefaultTimeout = time.Second * 3600
 var DefaultInterval = time.Second * 5
 
 const BuilderId = "qingcloud.builder"

@@ -93,8 +93,9 @@ func (step *StepEnsureIP) Cleanup(state multistep.StateBag) {
 	ui := state.Get(UI).(packer.Ui)
 	ui.Message("clean up eip if needed")
 	value, ok := state.GetOk(EIPID)
-	eip := value.(string)
-	if ok {
+
+	if ok && value != nil {
+		eip := value.(string)
 		config := state.Get(BuilderConfig).(Config)
 		if config.EIPID != eip {
 			qservice := config.GetQingCloudService()
