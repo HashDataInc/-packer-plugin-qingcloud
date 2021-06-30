@@ -8,7 +8,6 @@ import (
 	"github.com/yunify/qingcloud-sdk-go/client"
 	"github.com/yunify/qingcloud-sdk-go/service"
 	"github.com/yunify/qingcloud-sdk-go/utils"
-
 )
 
 type StepEnsureIP struct {

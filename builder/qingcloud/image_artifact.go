@@ -6,7 +6,7 @@ import (
 )
 
 type ImageArtifact struct {
-	ImageID string
+	ImageID      string
 	ImageService *service.ImageService
 }
 
@@ -23,7 +23,7 @@ func (artifact *ImageArtifact) Id() string {
 }
 
 func (artifact *ImageArtifact) String() string {
-	return fmt.Sprintf("QingCloud image %s",artifact.ImageID)
+	return fmt.Sprintf("QingCloud image %s", artifact.ImageID)
 }
 
 func (artifact *ImageArtifact) State(name string) interface{} {
@@ -31,6 +31,6 @@ func (artifact *ImageArtifact) State(name string) interface{} {
 }
 
 func (artifact *ImageArtifact) Destroy() error {
-	_,err:=artifact.ImageService.DeleteImages(&service.DeleteImagesInput{Images:service.StringSlice([]string{artifact.ImageID})})
+	_, err := artifact.ImageService.DeleteImages(&service.DeleteImagesInput{Images: service.StringSlice([]string{artifact.ImageID})})
 	return err
 }

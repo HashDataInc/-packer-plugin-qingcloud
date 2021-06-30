@@ -9,26 +9,25 @@ import (
 )
 
 type StepShutDownVM struct {
-
 }
 
-func (step *StepShutDownVM) Run(ctx context.Context,state multistep.StateBag) multistep.StepAction {
+func (step *StepShutDownVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get(BuilderConfig).(Config)
 	ui := state.Get(UI).(packer.Ui)
 	instanceID := state.Get(InstanceID).(string)
-	qservice:=config.GetQingCloudService()
-	instanceService,err:=qservice.Instance(config.Zone)
+	qservice := config.GetQingCloudService()
+	instanceService, err := qservice.Instance(config.Zone)
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-	_,err=instanceService.StopInstances(&service.StopInstancesInput{Instances:[]*string{service.String(instanceID)}})
+	_, err = instanceService.StopInstances(&service.StopInstancesInput{Instances: []*string{service.String(instanceID)}})
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
-	_,err=client.WaitInstanceStatus(instanceService,instanceID,client.InstanceStatusStopped,DefaultTimeout,DefaultInterval)
+	_, err = client.WaitInstanceStatus(instanceService, instanceID, client.InstanceStatusStopped, DefaultTimeout, DefaultInterval)
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
@@ -40,4 +39,3 @@ func (step *StepShutDownVM) Run(ctx context.Context,state multistep.StateBag) mu
 func (step *StepShutDownVM) Cleanup(state multistep.StateBag) {
 	return
 }
-
