@@ -27,6 +27,7 @@ const (
 	PrivateIP       = "private_ip"
 	LoginKeyPairID  = "keypair_id"
 	PrivateKey      = "private_key_content"
+	Password        = "password"
 )
 
 const (
@@ -112,7 +113,17 @@ func (b *Builder) getHost(state multistep.StateBag) (string, error) {
 
 func (b *Builder) getSSHConfig(state multistep.StateBag) (*gossh.ClientConfig, error) {
 	config := state.Get(BuilderConfig).(Config)
-	privateKey := state.Get(PrivateKey).(string)
+	privateKey, ok := state.Get(PrivateKey).(string)
+	if !ok {
+		password := state.Get(Password).(string)
+		return &gossh.ClientConfig{
+			User: config.SSHUsername,
+			Auth: []gossh.AuthMethod{
+				gossh.Password(password),
+			},
+			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
+		}, nil
+	}
 	signer, err := gossh.ParsePrivateKey([]byte(privateKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up ssh config：%v", err)

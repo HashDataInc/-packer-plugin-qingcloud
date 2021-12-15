@@ -33,6 +33,7 @@ type Config struct {
 	EIPID               string `mapstructure:"eip_id"`
 	SecurityGroupID     string `mapstructure:"securitygroup_id"`
 	KeypairID           string `mapstructure:"keypair_id"`
+	Password            string `mapstructure:"password"`
 	BaseImageID         string `mapstructure:"image_id"`
 	ImageArtifactName   string `mapstructure:"image_name"`
 	CPU                 int    `mapstructure:"cpu"`
@@ -212,6 +213,8 @@ func (config *Config) validate() error {
 		if *describeKeypairOutput.RetCode != 0 || *describeKeypairOutput.TotalCount != 1 {
 			return fmt.Errorf("keypair is not found,%s", *describeKeypairOutput.Message)
 		}
+	} else if len(config.KeypairID) == 0 && config.Password != "" {
+		//TODO 校验密码是否符合
 	}
 	if len(config.ImageArtifactName) == 0 {
 		config.ImageArtifactName = "packer" + config.PackerBuildName
