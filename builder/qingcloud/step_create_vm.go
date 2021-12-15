@@ -13,13 +13,14 @@ type StepCreateVM struct {
 
 const (
 	LOGIN_MODE_KEYPAIR = "keypair"
+	LOGIN_MODE_PASS    = "passwd"
 )
 
 func (step *StepCreateVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get(BuilderConfig).(Config)
 	ui := state.Get(UI).(packer.Ui)
 	ui.Message("Start to provision vm")
-
+	var err error
 	qservice := config.GetQingCloudService()
 	instanceService, err := qservice.Instance(config.Zone)
 	if err != nil {
@@ -27,18 +28,34 @@ func (step *StepCreateVM) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionHalt
 	}
 	securityGroupID := state.Get(SecurityGroupID).(string)
-	loginKeyPairID := state.Get(LoginKeyPairID).(string)
-	instanceJobOutput, err := instanceService.RunInstances(&service.RunInstancesInput{
-		CPU:           service.Int(config.CPU),
-		Memory:        service.Int(config.Memory),
-		VxNets:        []*string{service.String(config.VxnetID)},
-		InstanceName:  service.String("packer" + config.PackerBuildName),
-		ImageID:       service.String(config.BaseImageID),
-		InstanceClass: &config.InstanceClass,
-		SecurityGroup: service.String(securityGroupID),
-		LoginKeyPair:  service.String(loginKeyPairID),
-		LoginMode:     service.String(LOGIN_MODE_KEYPAIR),
-	})
+	loginKeyPairID, ok := state.Get(LoginKeyPairID).(string)
+	var instanceJobOutput *service.RunInstancesOutput
+	if ok {
+		instanceJobOutput, err = instanceService.RunInstances(&service.RunInstancesInput{
+			CPU:           service.Int(config.CPU),
+			Memory:        service.Int(config.Memory),
+			VxNets:        []*string{service.String(config.VxnetID)},
+			InstanceName:  service.String("packer" + config.PackerBuildName),
+			ImageID:       service.String(config.BaseImageID),
+			InstanceClass: &config.InstanceClass,
+			SecurityGroup: service.String(securityGroupID),
+			LoginKeyPair:  service.String(loginKeyPairID),
+			LoginMode:     service.String(LOGIN_MODE_KEYPAIR),
+		})
+	} else {
+		LoginPassWord := state.Get(Password).(string)
+		instanceJobOutput, err = instanceService.RunInstances(&service.RunInstancesInput{
+			CPU:           service.Int(config.CPU),
+			Memory:        service.Int(config.Memory),
+			VxNets:        []*string{service.String(config.VxnetID)},
+			InstanceName:  service.String("packer" + config.PackerBuildName),
+			ImageID:       service.String(config.BaseImageID),
+			InstanceClass: &config.InstanceClass,
+			SecurityGroup: service.String(securityGroupID),
+			LoginPasswd:   service.String(LoginPassWord),
+			LoginMode:     service.String(LOGIN_MODE_PASS),
+		})
+	}
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt

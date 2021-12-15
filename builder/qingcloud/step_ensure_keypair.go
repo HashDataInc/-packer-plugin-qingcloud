@@ -25,7 +25,11 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-	if len(config.KeypairID) == 0 || config.KeypairID == AllocateNewID {
+	var flgUsePassword = false
+	if len(config.KeypairID) == 0 && config.Password != "" {
+		flgUsePassword = true
+		state.Put(Password, config.Password)
+	} else if config.KeypairID == AllocateNewID {
 		keypairOutput, err := keypairService.CreateKeyPair(
 			&service.CreateKeyPairInput{
 				KeyPairName:   service.String("packer" + config.PackerConfig.PackerBuildName),
@@ -76,9 +80,10 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 
 		privateKey = string(pk)
 	}
-	state.Put(LoginKeyPairID, loginKeyPairID)
-	state.Put(PrivateKey, privateKey)
-
+	if !flgUsePassword {
+		state.Put(LoginKeyPairID, loginKeyPairID)
+		state.Put(PrivateKey, privateKey)
+	}
 	return multistep.ActionContinue
 }
 
@@ -97,4 +102,5 @@ func (step *StepEnsureKeypair) Cleanup(state multistep.StateBag) {
 		}
 		keypairService.DeleteKeyPairs(&service.DeleteKeyPairsInput{KeyPairs: []*string{service.String(keypairID)}})
 	}
+
 }
