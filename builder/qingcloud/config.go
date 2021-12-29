@@ -213,8 +213,28 @@ func (config *Config) validate() error {
 		if *describeKeypairOutput.RetCode != 0 || *describeKeypairOutput.TotalCount != 1 {
 			return fmt.Errorf("keypair is not found,%s", *describeKeypairOutput.Message)
 		}
-	} else if len(config.KeypairID) == 0 && config.Password != "" {
-		//TODO 校验密码是否符合
+	}
+	if config.Password != "" {
+		//校验密码是否符合 1.至少8位. 2.包括大写小写字母，及数字。
+		if len(config.Password) < 8 {
+			return fmt.Errorf("Password length must be longer than eight digits. ")
+		}
+		flgUpper := false
+		flgLower := false
+		for i := 0; i < len(config.Password); i++ {
+			ch := config.Password[i]
+			if ch >= 65 && ch <= 65+25 {
+				flgUpper = true
+			} else if ch >= 97 && ch <= 97+25 {
+				flgLower = true
+			}
+		}
+		if flgUpper && flgLower {
+			return fmt.Errorf("The password must contain both uppercase and lowercase letters. ")
+		}
+	}
+	if len(config.KeypairID) == 0 && config.Password == "" {
+		return fmt.Errorf("KeypairID and Password cannot be empty at the same time")
 	}
 	if len(config.ImageArtifactName) == 0 {
 		config.ImageArtifactName = "packer" + config.PackerBuildName

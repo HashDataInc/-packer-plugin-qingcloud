@@ -25,11 +25,11 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-	var flgUsePassword = false
-	if len(config.KeypairID) == 0 && config.Password != "" {
-		flgUsePassword = true
+	if config.Password != "" {
 		state.Put(Password, config.Password)
-	} else if config.KeypairID == AllocateNewID {
+	}
+	flgHasKeypair := false
+	if config.KeypairID == AllocateNewID {
 		keypairOutput, err := keypairService.CreateKeyPair(
 			&service.CreateKeyPairInput{
 				KeyPairName:   service.String("packer" + config.PackerConfig.PackerBuildName),
@@ -43,7 +43,7 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 		}
 		privateKey = *keypairOutput.PrivateKey
 		loginKeyPairID = *keypairOutput.KeyPairID
-
+		flgHasKeypair = true
 	} else if config.KeypairID == LocalKey {
 		publicKey, err := loadFileContent(DefaultPublicKey)
 		if err != nil {
@@ -69,8 +69,8 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 		}
 		loginKeyPairID = *keypairOutput.KeyPairID
 		privateKey = *keypairOutput.PrivateKey
-
-	} else {
+		flgHasKeypair = true
+	} else if len(config.KeypairID) != 0 {
 		loginKeyPairID = config.KeypairID
 		pk, err := config.ReadSSHPrivateKeyFile()
 
@@ -79,8 +79,9 @@ func (step *StepEnsureKeypair) Run(ctx context.Context, state multistep.StateBag
 		}
 
 		privateKey = string(pk)
+		flgHasKeypair = true
 	}
-	if !flgUsePassword {
+	if flgHasKeypair {
 		state.Put(LoginKeyPairID, loginKeyPairID)
 		state.Put(PrivateKey, privateKey)
 	}
