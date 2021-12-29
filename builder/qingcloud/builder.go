@@ -112,27 +112,23 @@ func (b *Builder) getHost(state multistep.StateBag) (string, error) {
 }
 
 func (b *Builder) getSSHConfig(state multistep.StateBag) (*gossh.ClientConfig, error) {
+	var auth []gossh.AuthMethod
 	config := state.Get(BuilderConfig).(Config)
 	privateKey, ok := state.Get(PrivateKey).(string)
-	if !ok {
-		password := state.Get(Password).(string)
-		return &gossh.ClientConfig{
-			User: config.SSHUsername,
-			Auth: []gossh.AuthMethod{
-				gossh.Password(password),
-			},
-			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
-		}, nil
+	if ok {
+		signer, err := gossh.ParsePrivateKey([]byte(privateKey))
+		if err != nil {
+			return nil, fmt.Errorf("failed to set up ssh config：%v", err)
+		}
+		auth = append(auth, gossh.PublicKeys(signer))
 	}
-	signer, err := gossh.ParsePrivateKey([]byte(privateKey))
-	if err != nil {
-		return nil, fmt.Errorf("failed to set up ssh config：%v", err)
+	password, ok := state.Get(Password).(string)
+	if ok {
+		auth = append(auth, gossh.Password(password))
 	}
 	return &gossh.ClientConfig{
-		User: config.SSHUsername,
-		Auth: []gossh.AuthMethod{
-			gossh.PublicKeys(signer),
-		},
+		User:            config.SSHUsername,
+		Auth:            auth,
 		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}, nil
 }
